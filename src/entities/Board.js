@@ -7,6 +7,7 @@ const FRICTION = 0.99;
 const MAX_SPEED = 10;
 const TURN_SPEED = 8;
 const MIN_SPEED_TO_TURN = 0.3;
+const AIR_TURN_SPEED = 5;
 
 const JUMP_DURATION = 1;
 const MAX_JUMP_HEIGHT = 4;
@@ -14,8 +15,15 @@ const FIRST_JUMP_HEIGHT_RATIO = 0.5;
 const HEIGHT_DECAY_PER_TAP = 0.6;
 const HEIGHT_RECOVERY_RATE = 1.2;
 
-const ROTATION_OFFSET = 0;
+const ROTATION_OFFSET = Math.PI;
 const HEIGHT_SMOOTH_SPEED = 5;
+
+const DROP_START_HEIGHT = 12;
+const DROP_GRAVITY = 28;
+const BOUNCE_RESTITUTION = 0.3;
+const BOUNCE_MIN_VELOCITY = 1.2;
+const BOUNCE_HORIZONTAL_IMPULSE = 5;
+const BOUNCE_HEADING_JITTER = 0.2;
 
 function angleLerp(current, target, maxDelta) {
   let diff = ((target - current + Math.PI * 3) % (Math.PI * 2)) - Math.PI;
@@ -32,8 +40,9 @@ export class Board {
     this.loaded = false;
     this.onUpsideDown = onUpsideDown;
 
-    this.position = new THREE.Vector3(0, 0, 0);
+    this.position = new THREE.Vector3(0, DROP_START_HEIGHT, 0);
     this.velocity = new THREE.Vector3(0, 0, 0);
+    this.dropVelocityY = 0;
     this.heading = 0;
 
     this.isAirborne = false;
@@ -42,13 +51,11 @@ export class Board {
     this.flipRotation = 0;
 
     this.isUpsideDown = false;
+    this.isDropping = true;
 
-    this.jumpHeightFactor = FIRST_JUMP_HEIGHT_RATIO;
     this.displayHeightFactor = FIRST_JUMP_HEIGHT_RATIO;
 
     this._load();
-
-    
   }
 
   _load() {
@@ -88,10 +95,57 @@ export class Board {
     if (this.flipPivot) this.flipPivot.rotation.z = 0;
   }
 
+  dropIn() {
+    this.position.set(0, DROP_START_HEIGHT, 0);
+    this.velocity.set(0, 0, 0);
+    this.dropVelocityY = 0;
+    this.heading = 0;
+    this.isAirborne = false;
+    this.jumpProgress = 0;
+    this.jumpHeightFactor = FIRST_JUMP_HEIGHT_RATIO;
+    this.displayHeightFactor = FIRST_JUMP_HEIGHT_RATIO;
+    this.flipRotation = 0;
+    this.isUpsideDown = false;
+    this.isDropping = true;
+    if (this.flipPivot) this.flipPivot.rotation.z = 0;
+  }
+
   update(dt) {
     if (!this.loaded) return;
 
-    // --- 1. 입력 -> 가속도 (뒤집힌 상태여도 계속 조작 가능) ---
+    if (this.isDropping) {
+      this.dropVelocityY -= DROP_GRAVITY * dt;
+      this.position.y += this.dropVelocityY * dt;
+
+      if (this.position.y <= 0) {
+        this.position.y = 0;
+
+        if (Math.abs(this.dropVelocityY) > BOUNCE_MIN_VELOCITY) {
+          this.dropVelocityY = -this.dropVelocityY * BOUNCE_RESTITUTION;
+
+          const randomAngle = Math.random() * Math.PI * 2;
+          const impulse = (Math.random() * 0.6 + 0.4) * BOUNCE_HORIZONTAL_IMPULSE;
+          this.velocity.x += Math.cos(randomAngle) * impulse;
+          this.velocity.z += Math.sin(randomAngle) * impulse;
+
+          this.heading += (Math.random() * 2 - 1) * BOUNCE_HEADING_JITTER;
+        } else {
+          this.dropVelocityY = 0;
+          this.isDropping = false;
+        }
+      }
+
+      this.position.x += this.velocity.x * dt;
+      this.position.z += this.velocity.z * dt;
+      this.velocity.x *= FRICTION;
+      this.velocity.z *= FRICTION;
+
+      this.mesh.position.copy(this.position);
+      this.mesh.rotation.y = this.heading;
+      this.flipPivot.rotation.z = this.flipRotation;
+      return;
+    }
+
     let ix = 0,
       iz = 0;
     if (isKeyDown('ArrowUp')) iz -= 1;
@@ -100,38 +154,52 @@ export class Board {
     if (isKeyDown('ArrowRight')) ix += 1;
 
     const inputLen = Math.hypot(ix, iz);
-    if (inputLen > 0) {
+
+    if (!this.isAirborne) {
+      if (inputLen > 0) {
+        ix /= inputLen;
+        iz /= inputLen;
+        this.velocity.x += ix * ACCEL * dt;
+        this.velocity.z += iz * ACCEL * dt;
+      }
+
+      this.velocity.x *= FRICTION;
+      this.velocity.z *= FRICTION;
+
+      const speed = Math.hypot(this.velocity.x, this.velocity.z);
+      if (speed > MAX_SPEED) {
+        this.velocity.x = (this.velocity.x / speed) * MAX_SPEED;
+        this.velocity.z = (this.velocity.z / speed) * MAX_SPEED;
+      }
+    } else if (inputLen > 0) {
       ix /= inputLen;
       iz /= inputLen;
-      this.velocity.x += ix * ACCEL * dt;
-      this.velocity.z += iz * ACCEL * dt;
-    }
 
-    this.velocity.x *= FRICTION;
-    this.velocity.z *= FRICTION;
-
-    const speed = Math.hypot(this.velocity.x, this.velocity.z);
-    if (speed > MAX_SPEED) {
-      this.velocity.x = (this.velocity.x / speed) * MAX_SPEED;
-      this.velocity.z = (this.velocity.z / speed) * MAX_SPEED;
+      const currentSpeed = Math.hypot(this.velocity.x, this.velocity.z);
+      if (currentSpeed > 0.01) {
+        const currentAngle = Math.atan2(this.velocity.x, this.velocity.z);
+        const inputAngle = Math.atan2(ix, iz);
+        const newAngle = angleLerp(currentAngle, inputAngle, AIR_TURN_SPEED * dt);
+        this.velocity.x = Math.sin(newAngle) * currentSpeed;
+        this.velocity.z = Math.cos(newAngle) * currentSpeed;
+      }
     }
 
     this.position.x += this.velocity.x * dt;
     this.position.z += this.velocity.z * dt;
 
-    // --- 2. heading: 속도 벡터를 목표로 점진적 회전 ---
+    const speed = Math.hypot(this.velocity.x, this.velocity.z);
     if (speed > MIN_SPEED_TO_TURN) {
       const targetHeading = Math.atan2(this.velocity.x, this.velocity.z);
       this.heading = angleLerp(this.heading, targetHeading, TURN_SPEED * dt);
     }
 
-    // --- 3. 스페이스바: 새 점프 시작 또는 점프 높이 감쇠 ---
     if (isSpaceJustPressed()) {
       if (!this.isAirborne) {
         this.isAirborne = true;
         this.jumpProgress = 0;
         this.jumpHeightFactor = FIRST_JUMP_HEIGHT_RATIO;
-        this.displayHeightFactor = FIRST_JUMP_HEIGHT_RATIO; // 추가
+        this.displayHeightFactor = FIRST_JUMP_HEIGHT_RATIO;
       } else {
         this.jumpHeightFactor *= 1 - HEIGHT_DECAY_PER_TAP;
       }
@@ -144,43 +212,40 @@ export class Board {
       );
     }
 
-    // --- 4. 공중 상태 진행 ---
     if (this.isAirborne) {
-        this.jumpProgress += dt / JUMP_DURATION;
-        const jt = Math.min(this.jumpProgress, 1);
+      this.jumpProgress += dt / JUMP_DURATION;
+      const jt = Math.min(this.jumpProgress, 1);
 
-        // displayHeightFactor가 jumpHeightFactor(목표)를 향해 부드럽게 따라감
-        this.displayHeightFactor +=
-            (this.jumpHeightFactor - this.displayHeightFactor) *
-            Math.min(HEIGHT_SMOOTH_SPEED * dt, 1);
+      this.displayHeightFactor +=
+        (this.jumpHeightFactor - this.displayHeightFactor) *
+        Math.min(HEIGHT_SMOOTH_SPEED * dt, 1);
 
-        const actualHeight = MAX_JUMP_HEIGHT * Math.max(this.displayHeightFactor, 0.02);
-        this.position.y = Math.sin(jt * Math.PI) * actualHeight;
+      const actualHeight = MAX_JUMP_HEIGHT * Math.max(this.displayHeightFactor, 0.02);
+      this.position.y = Math.sin(jt * Math.PI) * actualHeight;
 
-        this.flipRotation = jt * Math.PI * 2;
+      this.flipRotation = jt * Math.PI * 2;
 
-        if (this.jumpProgress >= 1) {
-            this.position.y = 0;
-            this.isAirborne = false;
-            this.jumpProgress = 0;
-
-            const normalizedSpin = this.flipRotation % (Math.PI * 2);
-            const isCleanLanding =
-            normalizedSpin < 0.15 || normalizedSpin > Math.PI * 2 - 0.15;
-
-            if (isCleanLanding) {
-            this.flipRotation = 0;
-            this.isUpsideDown = false;
-            } else {
-            this.isUpsideDown = true;
-            if (this.onUpsideDown) this.onUpsideDown();
-            }
-        }
-        } else {
+      if (this.jumpProgress >= 1) {
         this.position.y = 0;
-        }
+        this.isAirborne = false;
+        this.jumpProgress = 0;
 
-    // --- 5. 반영 ---
+        const normalizedSpin = this.flipRotation % (Math.PI * 2);
+        const isCleanLanding =
+          normalizedSpin < 0.15 || normalizedSpin > Math.PI * 2 - 0.15;
+
+        if (isCleanLanding) {
+          this.flipRotation = 0;
+          this.isUpsideDown = false;
+        } else {
+          this.isUpsideDown = true;
+          if (this.onUpsideDown) this.onUpsideDown();
+        }
+      }
+    } else {
+      this.position.y = 0;
+    }
+
     this.mesh.position.copy(this.position);
     this.mesh.rotation.y = this.heading;
     this.flipPivot.rotation.z = this.flipRotation;
