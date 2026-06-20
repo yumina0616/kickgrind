@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>kickgrind</title>
+    <link rel="icon" href="/favicon.svg" />
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <div id="app">
+      <div id="intro">
+        <textarea id="textInput" placeholder="Type something repetitive and boring...">hi my name is mina and i like playing piano nice to meet you</textarea>
+        <button id="startBtn">Drop In ↗</button>
+        <p class="hint">Click the screen · Arrow keys to ride · Space to flip</p>
+      </div>
+      <canvas id="canvas"></canvas>
+      <div id="hud">
+        <span>Hits: <span id="hitCount">0</span></span>
+      </div>
+      <div id="resetBtn" class="reset-corner-btn">Reset Board</div>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
