@@ -12,7 +12,7 @@ const hud = document.getElementById('hud');
 const resetBtn = document.getElementById('resetBtn');
 const findBtn = document.getElementById('findBtn');
 
-const { scene, camera, renderer } = createScene();
+const { scene, camera, renderer, composer } = createScene();
 setupKeyboard();
 
 const { width: visW, height: visH } = getVisibleSizeAtGround(camera);
@@ -35,11 +35,10 @@ const board = new Board(scene, handleUpsideDown, { width: visW, height: visH });
 const loop = createLoop(
   (dt) => {
     board.update(dt);
-
     words.forEach((w) => {
       if (checkCollision(board, w)) {
         const boardSpeed = Math.hypot(board.velocity.x, board.velocity.z);
-        if (boardSpeed > 1.5) {
+        if (boardSpeed > 2.5) {
           resolveCollision(board, w);
           hitCount++;
           hitCountEl.textContent = hitCount;
@@ -49,7 +48,7 @@ const loop = createLoop(
     });
   },
   () => {
-    renderer.render(scene, camera);
+    composer.render();
   }
 );
 
@@ -70,4 +69,4 @@ resetBtn.addEventListener('click', () => {
   resetBtn.style.display = 'none';
 });
 
-renderer.render(scene, camera);
+composer.render(scene, camera);
