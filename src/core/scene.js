@@ -1,11 +1,12 @@
 import * as THREE from 'three';
+import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 
 export function createScene() {
   const canvas = document.getElementById('canvas');
 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x000000);
-  scene.fog = new THREE.Fog(0x000000, 12, 50);
+  scene.fog = new THREE.Fog(0x000000, 12, 34);
 
   const camera = new THREE.PerspectiveCamera(
     50,
@@ -22,6 +23,9 @@ export function createScene() {
   });
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+  const pmremGenerator = new THREE.PMREMGenerator(renderer);
+  scene.environment = pmremGenerator.fromScene(new RoomEnvironment(), 0.04).texture;
 
   const ambient = new THREE.AmbientLight(0xffffff, 0.5);
   scene.add(ambient);

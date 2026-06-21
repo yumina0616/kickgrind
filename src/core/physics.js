@@ -18,14 +18,14 @@ export function resolveCollision(board, word, hitStrength = 1) {
   const nz = dz / dist;
 
   const boardSpeed = Math.hypot(board.velocity.x, board.velocity.z);
-  const force = (420 + boardSpeed * 90) * hitStrength;
+  const force = boardSpeed * 50 * hitStrength;
 
   word.velocity.x += nx * force * 0.016;
   word.velocity.z += nz * force * 0.016;
 
   if (boardSpeed > 0.01) {
-    word.velocity.x += (board.velocity.x / boardSpeed) * 180 * 0.016;
-    word.velocity.z += (board.velocity.z / boardSpeed) * 180 * 0.016;
+    word.velocity.x += (board.velocity.x / boardSpeed) * boardSpeed * 35 * 0.016;
+    word.velocity.z += (board.velocity.z / boardSpeed) * boardSpeed * 35 * 0.016;
   }
 
   word.registerHit();

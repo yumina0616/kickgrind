@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { isKeyDown, isSpaceJustPressed } from '../input/keyboard.js';
+import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 
 const ACCEL = 14;
 const FRICTION = 0.99;
@@ -32,6 +33,8 @@ const LANDING_CORRECT_SPEED = 8;
 
 const UPRIGHT_RECOVERY_SPEED = 1.5;
 
+const UPSIDE_DOWN_FRICTION = 0.85;
+
 function angleLerp(current, target, maxDelta) {
   let diff = ((target - current + Math.PI * 3) % (Math.PI * 2)) - Math.PI;
   if (diff > maxDelta) diff = maxDelta;
@@ -62,12 +65,9 @@ export class Board {
 
     this.displayHeightFactor = FIRST_JUMP_HEIGHT_RATIO;
 
-    this.flipRotation = 0;
-    this.spinMultiplier = 1;
-
-    this.flipRotation = 0;
     this.spinMultiplier = 1;
     this.isCorrectingLanding = false;
+    this.landingTarget = 0;
 
     this._load();
   }
@@ -80,6 +80,16 @@ export class Board {
         const model = gltf.scene;
         model.scale.set(0.5, 0.5, 0.5);
         model.rotation.y = ROTATION_OFFSET;
+
+        model.traverse((child) => {
+          if (child.isMesh) {
+            child.material = new THREE.MeshStandardMaterial({
+              color: 0x888888,
+              metalness: 1,
+              roughness: 0.25,
+            });
+          }
+        });
 
         this.flipPivot = new THREE.Group();
         this.flipPivot.add(model);
@@ -167,29 +177,29 @@ export class Board {
     }
 
     if (this.isCorrectingLanding) {
-    this.flipRotation += (this.landingTarget - this.flipRotation) * Math.min(LANDING_CORRECT_SPEED * dt, 1);
-    if (Math.abs(this.flipRotation - this.landingTarget) < 0.02) {
+      this.flipRotation += (this.landingTarget - this.flipRotation) * Math.min(LANDING_CORRECT_SPEED * dt, 1);
+      if (Math.abs(this.flipRotation - this.landingTarget) < 0.02) {
         this.flipRotation = this.landingTarget;
         this.isCorrectingLanding = false;
-    }
+      }
     }
 
-    if(!this.isUpsideDown)
-    {    let ix = 0,
+    if (!this.isUpsideDown) {
+      let ix = 0,
         iz = 0;
-        if (isKeyDown('ArrowUp')) iz -= 1;
-        if (isKeyDown('ArrowDown')) iz += 1;
-        if (isKeyDown('ArrowLeft')) ix -= 1;
-        if (isKeyDown('ArrowRight')) ix += 1;
+      if (isKeyDown('ArrowUp')) iz -= 1;
+      if (isKeyDown('ArrowDown')) iz += 1;
+      if (isKeyDown('ArrowLeft')) ix -= 1;
+      if (isKeyDown('ArrowRight')) ix += 1;
 
-        const inputLen = Math.hypot(ix, iz);
+      const inputLen = Math.hypot(ix, iz);
 
-        if (!this.isAirborne) {
+      if (!this.isAirborne) {
         if (inputLen > 0) {
-            ix /= inputLen;
-            iz /= inputLen;
-            this.velocity.x += ix * ACCEL * dt;
-            this.velocity.z += iz * ACCEL * dt;
+          ix /= inputLen;
+          iz /= inputLen;
+          this.velocity.x += ix * ACCEL * dt;
+          this.velocity.z += iz * ACCEL * dt;
         }
 
         this.velocity.x *= FRICTION;
@@ -197,22 +207,25 @@ export class Board {
 
         const speed = Math.hypot(this.velocity.x, this.velocity.z);
         if (speed > MAX_SPEED) {
-            this.velocity.x = (this.velocity.x / speed) * MAX_SPEED;
-            this.velocity.z = (this.velocity.z / speed) * MAX_SPEED;
+          this.velocity.x = (this.velocity.x / speed) * MAX_SPEED;
+          this.velocity.z = (this.velocity.z / speed) * MAX_SPEED;
         }
-        } else if (inputLen > 0) {
+      } else if (inputLen > 0) {
         ix /= inputLen;
         iz /= inputLen;
 
         const currentSpeed = Math.hypot(this.velocity.x, this.velocity.z);
         if (currentSpeed > 0.01) {
-            const currentAngle = Math.atan2(this.velocity.x, this.velocity.z);
-            const inputAngle = Math.atan2(ix, iz);
-            const newAngle = angleLerp(currentAngle, inputAngle, AIR_TURN_SPEED * dt);
-            this.velocity.x = Math.sin(newAngle) * currentSpeed;
-            this.velocity.z = Math.cos(newAngle) * currentSpeed;
+          const currentAngle = Math.atan2(this.velocity.x, this.velocity.z);
+          const inputAngle = Math.atan2(ix, iz);
+          const newAngle = angleLerp(currentAngle, inputAngle, AIR_TURN_SPEED * dt);
+          this.velocity.x = Math.sin(newAngle) * currentSpeed;
+          this.velocity.z = Math.cos(newAngle) * currentSpeed;
         }
-        }
+      }
+    } else {
+      this.velocity.x *= UPSIDE_DOWN_FRICTION;
+      this.velocity.z *= UPSIDE_DOWN_FRICTION;
     }
 
     this.position.x += this.velocity.x * dt;
@@ -225,19 +238,19 @@ export class Board {
     }
 
     if (isSpaceJustPressed()) {
-    if (!this.isAirborne) {
+      if (!this.isAirborne) {
         this.isAirborne = true;
         this.jumpProgress = 0;
         this.jumpHeightFactor = FIRST_JUMP_HEIGHT_RATIO;
         this.displayHeightFactor = FIRST_JUMP_HEIGHT_RATIO;
         this.spinMultiplier = SPIN_MULTIPLIER_MIN + Math.random() * (SPIN_MULTIPLIER_MAX - SPIN_MULTIPLIER_MIN);
         if (this.isUpsideDown) {
-        this.isUpsideDown = false;
-        this.isCorrectingLanding = false;
+          this.isUpsideDown = false;
+          this.isCorrectingLanding = false;
         }
-    } else if (!this.isUpsideDown) {
+      } else if (!this.isUpsideDown) {
         this.jumpHeightFactor *= 1 - HEIGHT_DECAY_PER_TAP;
-    }
+      }
     }
 
     if (!this.isAirborne) {
@@ -247,43 +260,43 @@ export class Board {
       );
     }
 
-if (this.isAirborne) {
-  this.jumpProgress += dt / JUMP_DURATION;
-  const jt = Math.min(this.jumpProgress, 1);
+    if (this.isAirborne) {
+      this.jumpProgress += dt / JUMP_DURATION;
+      const jt = Math.min(this.jumpProgress, 1);
 
-  this.displayHeightFactor +=
-    (this.jumpHeightFactor - this.displayHeightFactor) *
-    Math.min(HEIGHT_SMOOTH_SPEED * dt, 1);
+      this.displayHeightFactor +=
+        (this.jumpHeightFactor - this.displayHeightFactor) *
+        Math.min(HEIGHT_SMOOTH_SPEED * dt, 1);
 
-  const actualHeight = MAX_JUMP_HEIGHT * Math.max(this.displayHeightFactor, 0.02);
-  this.position.y = Math.sin(jt * Math.PI) * actualHeight;
+      const actualHeight = MAX_JUMP_HEIGHT * Math.max(this.displayHeightFactor, 0.02);
+      this.position.y = Math.sin(jt * Math.PI) * actualHeight;
 
-  this.flipRotation = jt * Math.PI * 2 * this.spinMultiplier;
+      this.flipRotation = jt * Math.PI * 2 * this.spinMultiplier;
 
-    if (this.jumpProgress >= 1) {
-    this.position.y = 0;
-    this.isAirborne = false;
-    this.jumpProgress = 0;
+      if (this.jumpProgress >= 1) {
+        this.position.y = 0;
+        this.isAirborne = false;
+        this.jumpProgress = 0;
 
-    let normalizedSpin = this.flipRotation % (Math.PI * 2);
-    if (normalizedSpin < 0) normalizedSpin += Math.PI * 2;
+        let normalizedSpin = this.flipRotation % (Math.PI * 2);
+        if (normalizedSpin < 0) normalizedSpin += Math.PI * 2;
 
-    const isBottomHalf = normalizedSpin < Math.PI / 2 || normalizedSpin > Math.PI * 1.5;
+        const isBottomHalf = normalizedSpin < Math.PI / 2 || normalizedSpin > Math.PI * 1.5;
 
-    if (isBottomHalf) {
-    this.landingTarget = normalizedSpin > Math.PI ? Math.PI * 2 : 0;
-    this.isCorrectingLanding = true;
-    this.isUpsideDown = false;
+        if (isBottomHalf) {
+          this.landingTarget = normalizedSpin > Math.PI ? Math.PI * 2 : 0;
+          this.isCorrectingLanding = true;
+          this.isUpsideDown = false;
+        } else {
+          this.landingTarget = Math.PI;
+          this.flipRotation = normalizedSpin;
+          this.isCorrectingLanding = true;
+          this.isUpsideDown = true;
+          if (this.onUpsideDown) this.onUpsideDown();
+        }
+      }
     } else {
-        this.landingTarget = Math.PI;
-        this.flipRotation = normalizedSpin;
-        this.isCorrectingLanding = true;
-        this.isUpsideDown = true;
-        if (this.onUpsideDown) this.onUpsideDown();
-    }
-    }
-    } else {
-    this.position.y = 0;
+      this.position.y = 0;
     }
 
     this.mesh.position.copy(this.position);

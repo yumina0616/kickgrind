@@ -27,8 +27,8 @@ function createTextTexture(text) {
   return { texture, width: canvas.width, height: canvas.height };
 }
 
-const IDLE_COLOR = new THREE.Color('#5fa8e0');
-const HIT_COLOR = new THREE.Color('#ffd23f');
+const IDLE_COLOR = new THREE.Color('#ffffff');
+const HIT_COLOR = new THREE.Color('#ff0066');
 const DAMPING = 0.985;
 const FREE_FLIGHT_DURATION = 0.35;
 const PULL_STRENGTH = 0.1;
