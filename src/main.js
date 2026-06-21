@@ -71,14 +71,12 @@ const loop = createLoop(
   }
 );
 
-startBtn.addEventListener('click', () => {
-  console.log('AudioContext state:', boardAudio.listener.context.state);
-
+startBtn.addEventListener('click', async () => {
   if (boardAudio.listener.context.state === 'suspended') {
-    boardAudio.listener.context.resume().then(() => {
-      console.log('AudioContext resumed:', boardAudio.listener.context.state);
-    });
+    boardAudio.listener.context.resume();
   }
+
+  await document.fonts.ready;
 
   words = buildWords(textInput.value, scene, visW, visH);
 
