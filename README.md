@@ -1,18 +1,19 @@
 # kickgrind
 
-🔗 [Live Demo](https://yumina0616.github.io/kickgrind) <!-- 배포 후 URL로 교체 -->
+🔗 [Live Demo](https://yumina0616.github.io/kickgrind/)
 
 A 3D world made entirely of repetitive, tired words — and a skateboard that lets you smash through it.
 
 I've recently gotten into skateboarding, and what drew me in was how dynamic and bold its movements are — never following a fixed line, always carving its own path. This project grew out of wanting to bring that same unpredictability into something tedious and repetitive: take the most clichéd, overused sentence you can think of, fill the screen with it, and let a skateboard tear an unscripted path straight through it.
 
-Drop in whenever you need to skate over something tedious 🛹
+Drop in whenever you need to skate over something tedious ... 🛹
 
 ## About
 
 The screen fills with whatever text you type — repeated over and over until it covers the entire ground. A 3D skateboard, modeled by hand in Blender, drops in from above and lands on the text field. You steer it with the arrow keys, carve through the words, flip with the spacebar, and watch the letters glow and scatter as the board smashes through them.
 
 This is my first project combining hand-built 3D assets with real-time physics and interactive web design — a step up from my first interactive web project, [I'll Cry For You](https://yumina0616.github.io/CryForU).
+![Created with Blender](image.png)
 
 ## Interactions
 
@@ -34,4 +35,4 @@ This is my first project combining hand-built 3D assets with real-time physics a
 ## Author
 
 Mina Yu
-CS student with a love for interactive web design — currently obsessed with skateboarding and figuring out how to put that feeling into code.
+CS student with a love for interactive web design.
