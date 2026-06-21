@@ -10,7 +10,7 @@ export function createScene() {
 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x000000);
-  scene.fog = new THREE.Fog(0x000000, 12, 34);
+  scene.fog = new THREE.Fog(0x000000, 12, 40);
 
   const camera = new THREE.PerspectiveCamera(
     50,
@@ -49,7 +49,7 @@ export function createScene() {
     new THREE.Vector2(window.innerWidth, window.innerHeight),
     0.2,
     0.05,
-    0.2
+    0.4
   );
   composer.addPass(bloomPass);
   composer.addPass(new OutputPass());

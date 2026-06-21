@@ -2,7 +2,7 @@ import { Word } from './Word.js';
 
 const WORD_GAP = 0.15;
 const LINE_GAP = 0.15;
-const PERSPECTIVE_FILL_FACTOR = 2.6;
+const PERSPECTIVE_FILL_FACTOR = 4;
 
 export function getVisibleSizeAtGround(camera) {
   const distance = camera.position.y;

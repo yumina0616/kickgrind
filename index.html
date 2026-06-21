@@ -6,6 +6,9 @@
     <title>kickgrind</title>
     <link rel="icon" href="/favicon.svg" />
     <link rel="stylesheet" href="/src/style.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400..900&family=Press+Start+2P&family=Share+Tech+Mono&display=swap" rel="stylesheet">
   </head>
   <body>
     <div id="app">
@@ -18,8 +21,12 @@
       <div id="hud">
         <span>Hits: <span id="hitCount">0</span></span>
       </div>
-      <div id="resetBtn" class="reset-corner-btn">Reset Board</div>
-      <div id="findBtn" class="find-corner-btn">Find Board</div>
+      <button id="findBtn" class="find-icon-btn" aria-label="Reset Board">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 12a9 9 0 1 0 3-6.7" />
+          <polyline points="3 4 3 9 8 9" />
+        </svg>
+      </button>
     </div>
     <script type="module" src="/src/main.js"></script>
   </body>

@@ -121,17 +121,29 @@ html, body {
   display: none;
 }
 
-.find-corner-btn {
+.find-icon-btn {
   position: absolute;
   top: 14px;
-  right: 130px;
-  background: #5fa8e0;
-  color: #000;
-  border: none;
-  border-radius: 8px;
-  padding: 8px 16px;
-  font-size: 13px;
-  font-weight: 600;
+  right: 14px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  color: #fff;
   cursor: pointer;
   z-index: 25;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.find-icon-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: rotate(45deg);
+}
+
+.find-icon-btn:active {
+  transform: rotate(90deg) scale(0.92);
 }

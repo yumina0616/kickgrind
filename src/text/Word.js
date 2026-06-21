@@ -1,13 +1,14 @@
 import * as THREE from 'three';
 
-const FONT_SIZE_PX = 64;
-const PADDING_PX = 12;
+const FONT_SIZE_PX = 32;
+const PADDING_PX = 2;
+const FONT_FAMILY = '"Orbitron", sans-serif';
 
 function createTextTexture(text) {
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
 
-  ctx.font = `${FONT_SIZE_PX}px sans-serif`;
+  ctx.font = `${FONT_SIZE_PX}px ${FONT_FAMILY}`;
   const metrics = ctx.measureText(text);
   const textWidth = Math.ceil(metrics.width);
   const textHeight = FONT_SIZE_PX * 1.2;
@@ -15,7 +16,7 @@ function createTextTexture(text) {
   canvas.width = textWidth + PADDING_PX * 2;
   canvas.height = textHeight + PADDING_PX * 2;
 
-  ctx.font = `${FONT_SIZE_PX}px sans-serif`;
+  ctx.font = `${FONT_SIZE_PX}px ${FONT_FAMILY}`;
   ctx.fillStyle = '#ffffff';
   ctx.textBaseline = 'middle';
   ctx.textAlign = 'center';
@@ -27,11 +28,11 @@ function createTextTexture(text) {
   return { texture, width: canvas.width, height: canvas.height };
 }
 
-const IDLE_COLOR = new THREE.Color('#ffffff');
-const HIT_COLOR = new THREE.Color('#ff0066');
+const IDLE_COLOR = new THREE.Color('#39FF14');
+const HIT_COLOR = new THREE.Color('#1f8c0b');
 const DAMPING = 0.985;
 const FREE_FLIGHT_DURATION = 0.35;
-const PULL_STRENGTH = 0.1;
+const PULL_STRENGTH = 0.15;
 
 export class Word {
   constructor(text, worldUnitsPerPixel = 0.02) {

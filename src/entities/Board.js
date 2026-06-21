@@ -22,9 +22,9 @@ const HEIGHT_SMOOTH_SPEED = 5;
 const DROP_START_HEIGHT = 12;
 const DROP_GRAVITY = 28;
 const BOUNCE_RESTITUTION = 0;
-const BOUNCE_MIN_VELOCITY = 1.2;
-const BOUNCE_HORIZONTAL_IMPULSE = 5;
-const BOUNCE_HEADING_JITTER = 0.2;
+const BOUNCE_MIN_VELOCITY = 8;
+const BOUNCE_HORIZONTAL_IMPULSE = 1.2;
+const BOUNCE_HEADING_JITTER = 0.08;
 
 const SPIN_MULTIPLIER_MIN = 0.6;
 const SPIN_MULTIPLIER_MAX = 2.2;
@@ -43,12 +43,15 @@ function angleLerp(current, target, maxDelta) {
 }
 
 export class Board {
-  constructor(scene, onUpsideDown) {
+  constructor(scene, onUpsideDown, onJump, onMeshReady, onLand) {
     this.scene = scene;
     this.mesh = null;
     this.flipPivot = null;
     this.loaded = false;
     this.onUpsideDown = onUpsideDown;
+    this.onJump = onJump;
+    this.onMeshReady = onMeshReady;
+    this.onLand = onLand;
 
     this.position = new THREE.Vector3(0, DROP_START_HEIGHT, 0);
     this.velocity = new THREE.Vector3(0, 0, 0);
@@ -100,6 +103,7 @@ export class Board {
         this.mesh.position.copy(this.position);
         this.scene.add(this.mesh);
         this.loaded = true;
+        if (this.onMeshReady) this.onMeshReady(this.mesh);
       },
       undefined,
       (error) => console.error('Failed to load board.glb:', error)
@@ -162,6 +166,7 @@ export class Board {
         } else {
           this.dropVelocityY = 0;
           this.isDropping = false;
+          if (this.onLand) this.onLand();
         }
       }
 
@@ -248,6 +253,7 @@ export class Board {
           this.isUpsideDown = false;
           this.isCorrectingLanding = false;
         }
+        if (this.onJump) this.onJump();
       } else if (!this.isUpsideDown) {
         this.jumpHeightFactor *= 1 - HEIGHT_DECAY_PER_TAP;
       }
