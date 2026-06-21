@@ -29,7 +29,7 @@ export class BoardAudio {
     const loader = new THREE.AudioLoader();
 
     loader.load(
-      '/sounds/roll.mp3',
+      `${import.meta.env.BASE_URL}sounds/roll.mp3`,
       (buffer) => {
         this.rollBuffer = buffer;
         this.rollLoaded = true;
@@ -39,7 +39,7 @@ export class BoardAudio {
       (error) => console.error('roll.mp3 load FAILED:', error)
     );
 
-    const jumpFiles = ['/sounds/jump1.mp3', '/sounds/jump2.mp3'];
+    const jumpFiles = [`${import.meta.env.BASE_URL}sounds/jump1.mp3`, `${import.meta.env.BASE_URL}sounds/jump2.mp3`,];
     jumpFiles.forEach((path, i) => {
       loader.load(
         path,
@@ -51,7 +51,7 @@ export class BoardAudio {
       );
     });
 
-    const landFiles = ['/sounds/land1.mp3', '/sounds/land2.mp3', '/sounds/land3.mp3'];
+    const landFiles = [`${import.meta.env.BASE_URL}sounds/land1.mp3`, `${import.meta.env.BASE_URL}sounds/land2.mp3`, `${import.meta.env.BASE_URL}sounds/land3.mp3`,];
     landFiles.forEach((path, i) => {
       loader.load(
         path,

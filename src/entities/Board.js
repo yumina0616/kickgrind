@@ -78,7 +78,7 @@ export class Board {
   _load() {
     const loader = new GLTFLoader();
     loader.load(
-      '/models/board.glb',
+      `${import.meta.env.BASE_URL}models/board.glb`,
       (gltf) => {
         const model = gltf.scene;
         model.scale.set(0.5, 0.5, 0.5);
