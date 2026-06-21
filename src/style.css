@@ -147,3 +147,9 @@ html, body {
 .find-icon-btn:active {
   transform: rotate(90deg) scale(0.92);
 }
+
+.font-preload {
+  position: absolute;
+  visibility: hidden;
+  font-family: "Orbitron", "Press Start 2P", "Share Tech Mono";
+}

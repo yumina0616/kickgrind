@@ -76,7 +76,11 @@ startBtn.addEventListener('click', async () => {
     boardAudio.listener.context.resume();
   }
 
-  await document.fonts.ready;
+  await Promise.all([
+    document.fonts.load('32px "Orbitron"'),
+    document.fonts.load('32px "Press Start 2P"'),
+    document.fonts.load('32px "Share Tech Mono"'),
+  ]);
 
   words = buildWords(textInput.value, scene, visW, visH);
 
